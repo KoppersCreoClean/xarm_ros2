@@ -11,7 +11,7 @@ namespace xarm_planner
 {
 const double jump_threshold = 0.0;
 const double eef_step = 0.005;
-const double max_velocity_scaling_factor = 0.3;  // [move_group_interface] default is 0.1
+const double max_velocity_scaling_factor = 0.5;  // [move_group_interface] default is 0.1
 const double max_acceleration_scaling_factor = 0.1;  // [move_group_interface] default is 0.1
 
 XArmPlanner::XArmPlanner(const rclcpp::Node::SharedPtr& node, const std::string& group_name)
@@ -36,6 +36,8 @@ void XArmPlanner::init(const std::string& group_name)
     std::copy(move_group_->getJointModelGroupNames().begin(), move_group_->getJointModelGroupNames().end(), std::ostream_iterator<std::string>(std::cout, ", "));
     move_group_->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
     move_group_->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
+    move_group_->setNumPlanningAttempts(10);
+    move_group_->setPlanningTime(5.0);
 }
 
 bool XArmPlanner::planJointTarget(const std::vector<double>& joint_target)
@@ -46,6 +48,16 @@ bool XArmPlanner::planJointTarget(const std::vector<double>& joint_target)
     success = (move_group_->plan(xarm_plan_) == moveit::core::MoveItErrorCode::SUCCESS);
     if (!success)
         RCLCPP_ERROR(node_->get_logger(), "planJointTarget: plan failed");
+    
+    // trajectory_msgs::msg::JointTrajectory joint_trajectory = xarm_plan_.trajectory_.joint_trajectory;
+    // uint32_t dt = 100000000;
+    // for(int i = 0; i < joint_trajectory.points.size(); i++) {
+    //     RCLCPP_INFO(node_->get_logger(), "sec_from_start: %d, nanosec_from_start: %d", joint_trajectory.points[i].time_from_start.sec, joint_trajectory.points[i].time_from_start.nanosec);
+    //     for(int j = 0; j < joint_trajectory.points[i].positions.size(); j++) {
+    //         RCLCPP_INFO(node_->get_logger(), "position %d: %lf", j, joint_trajectory.points[i].positions[j]);
+    //     }
+    // }
+
     is_trajectory_ = false;
     return success;
 }
@@ -58,6 +70,7 @@ bool XArmPlanner::planPoseTarget(const geometry_msgs::msg::Pose& pose_target)
     success = (move_group_->plan(xarm_plan_) == moveit::core::MoveItErrorCode::SUCCESS);
     if (!success)
         RCLCPP_ERROR(node_->get_logger(), "planPoseTarget: plan failed");
+
     is_trajectory_ = false;
     return success;
 }
@@ -78,7 +91,18 @@ bool XArmPlanner::planCartesianPath(const std::vector<geometry_msgs::msg::Pose>&
 {   
     // moveit_msgs::msg::RobotTrajectory trajectory;
     
-    double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_);
+    double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_, true);
+    trajectory_msgs::msg::JointTrajectory joint_trajectory = trajectory_.joint_trajectory;
+    uint32_t dt = 100000000;
+    for(int i = 0; i < joint_trajectory.points.size(); i++) {
+        joint_trajectory.points[i].time_from_start.nanosec = i*dt % 1000000000;
+        joint_trajectory.points[i].time_from_start.sec = i*dt / 1000000000;
+        // RCLCPP_INFO(node_->get_logger(), "sec_from_start: %d, nanosec_from_start: %d", joint_trajectory.points[i].time_from_start.sec, joint_trajectory.points[i].time_from_start.nanosec);
+        // for(int j = 0; j < joint_trajectory.points[i].positions.size(); j++) {
+        //     RCLCPP_INFO(node_->get_logger(), "position %d: %lf", j, joint_trajectory.points[i].positions[j]);
+        // }
+    }
+    trajectory_.joint_trajectory = joint_trajectory;
     bool success = true;
     if(fraction < 0.9) {
         RCLCPP_ERROR(node_->get_logger(), "planCartesianPath: plan failed, fraction=%lf", fraction);
