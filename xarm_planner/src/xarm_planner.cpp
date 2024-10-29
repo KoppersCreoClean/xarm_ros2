@@ -91,7 +91,7 @@ bool XArmPlanner::planCartesianPath(const std::vector<geometry_msgs::msg::Pose>&
 {   
     // moveit_msgs::msg::RobotTrajectory trajectory;
     
-    double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_, true);
+    double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_, false);
     trajectory_msgs::msg::JointTrajectory joint_trajectory = trajectory_.joint_trajectory;
     uint32_t dt = 100000000;
     for(int i = 0; i < joint_trajectory.points.size(); i++) {
