@@ -12,7 +12,7 @@ namespace xarm_planner
 const double jump_threshold = 0.0;
 const double eef_step = 0.005;
 const double max_velocity_scaling_factor = 0.5;  // [move_group_interface] default is 0.1
-const double max_acceleration_scaling_factor = 0.1;  // [move_group_interface] default is 0.1
+const double max_acceleration_scaling_factor = 0.2;  // [move_group_interface] default is 0.1
 
 XArmPlanner::XArmPlanner(const rclcpp::Node::SharedPtr& node, const std::string& group_name)
     : node_(node)
@@ -37,7 +37,7 @@ void XArmPlanner::init(const std::string& group_name)
     move_group_->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
     move_group_->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
     move_group_->setNumPlanningAttempts(10);
-    move_group_->setPlanningTime(5.0);
+    move_group_->setPlanningTime(20.0);
 }
 
 bool XArmPlanner::planJointTarget(const std::vector<double>& joint_target)
