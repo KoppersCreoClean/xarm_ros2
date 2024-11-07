@@ -23,6 +23,7 @@
 #include <xarm_msgs/srv/plan_joint.hpp>
 #include <xarm_msgs/srv/plan_exec.hpp>
 #include <xarm_msgs/srv/plan_single_straight.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 
 
 namespace xarm_planner
@@ -37,7 +38,7 @@ namespace xarm_planner
         bool planJointTarget(const std::vector<double>& joint_target);
         bool planPoseTarget(const geometry_msgs::msg::Pose& pose_target);
         bool planPoseTargets(const std::vector<geometry_msgs::msg::Pose>& pose_target_vector);
-        bool planCartesianPath(const std::vector<geometry_msgs::msg::Pose>& pose_target_vector);
+        bool planCartesianPath(const trajectory_msgs::msg::JointTrajectory& joint_trajectory);
 
         bool executePath(bool wait = true);
     private:

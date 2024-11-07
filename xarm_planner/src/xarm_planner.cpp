@@ -11,7 +11,7 @@ namespace xarm_planner
 {
 const double jump_threshold = 0.0;
 const double eef_step = 0.005;
-const double max_velocity_scaling_factor = 0.5;  // [move_group_interface] default is 0.1
+const double max_velocity_scaling_factor = 0.1;  // [move_group_interface] default is 0.1
 const double max_acceleration_scaling_factor = 0.2;  // [move_group_interface] default is 0.1
 
 XArmPlanner::XArmPlanner(const rclcpp::Node::SharedPtr& node, const std::string& group_name)
@@ -87,33 +87,40 @@ bool XArmPlanner::planPoseTargets(const std::vector<geometry_msgs::msg::Pose>& p
     return success;
 }
 
-bool XArmPlanner::planCartesianPath(const std::vector<geometry_msgs::msg::Pose>& pose_target_vector)
-{   
-    // moveit_msgs::msg::RobotTrajectory trajectory;
-    
-    double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_, false);
-    trajectory_msgs::msg::JointTrajectory joint_trajectory = trajectory_.joint_trajectory;
-    uint32_t dt = 100000000;
-    for(int i = 0; i < joint_trajectory.points.size(); i++) {
-        joint_trajectory.points[i].time_from_start.nanosec = i*dt % 1000000000;
-        joint_trajectory.points[i].time_from_start.sec = i*dt / 1000000000;
-        // RCLCPP_INFO(node_->get_logger(), "sec_from_start: %d, nanosec_from_start: %d", joint_trajectory.points[i].time_from_start.sec, joint_trajectory.points[i].time_from_start.nanosec);
-        // for(int j = 0; j < joint_trajectory.points[i].positions.size(); j++) {
-        //     RCLCPP_INFO(node_->get_logger(), "position %d: %lf", j, joint_trajectory.points[i].positions[j]);
-        // }
-    }
+bool XArmPlanner::planCartesianPath(const trajectory_msgs::msg::JointTrajectory& joint_trajectory)
+{
     trajectory_.joint_trajectory = joint_trajectory;
-    bool success = true;
-    if(fraction < 0.9) {
-        RCLCPP_ERROR(node_->get_logger(), "planCartesianPath: plan failed, fraction=%lf", fraction);
-        return false;
-    }
     is_trajectory_ = true;
-    // https://github.com/ros-planning/moveit2/commit/8bfe782d6254997d185644fa3eb358d2b79d69b2
-    // (struct Plan) trajectory_ => trajectory
-    // xarm_plan_.trajectory_ = trajectory;
     return true;
 }
+
+// bool XArmPlanner::planCartesianPath(const std::vector<geometry_msgs::msg::Pose>& pose_target_vector)
+// {   
+//     // moveit_msgs::msg::RobotTrajectory trajectory;
+    
+//     double fraction = move_group_->computeCartesianPath(pose_target_vector, eef_step, jump_threshold, trajectory_, false);
+//     trajectory_msgs::msg::JointTrajectory joint_trajectory = trajectory_.joint_trajectory;
+//     uint32_t dt = 100000000;
+//     for(int i = 0; i < joint_trajectory.points.size(); i++) {
+//         joint_trajectory.points[i].time_from_start.nanosec = i*dt % 1000000000;
+//         joint_trajectory.points[i].time_from_start.sec = i*dt / 1000000000;
+//         // RCLCPP_INFO(node_->get_logger(), "sec_from_start: %d, nanosec_from_start: %d", joint_trajectory.points[i].time_from_start.sec, joint_trajectory.points[i].time_from_start.nanosec);
+//         // for(int j = 0; j < joint_trajectory.points[i].positions.size(); j++) {
+//         //     RCLCPP_INFO(node_->get_logger(), "position %d: %lf", j, joint_trajectory.points[i].positions[j]);
+//         // }
+//     }
+//     trajectory_.joint_trajectory = joint_trajectory;
+//     bool success = true;
+//     if(fraction < 0.9) {
+//         RCLCPP_ERROR(node_->get_logger(), "planCartesianPath: plan failed, fraction=%lf", fraction);
+//         return false;
+//     }
+//     is_trajectory_ = true;
+//     // https://github.com/ros-planning/moveit2/commit/8bfe782d6254997d185644fa3eb358d2b79d69b2
+//     // (struct Plan) trajectory_ => trajectory
+//     // xarm_plan_.trajectory_ = trajectory;
+//     return true;
+// }
 
 bool XArmPlanner::executePath(bool wait)
 {

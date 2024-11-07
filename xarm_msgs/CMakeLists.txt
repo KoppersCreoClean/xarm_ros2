@@ -35,6 +35,7 @@ endif()
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 set(msg_files
   "msg/RobotMsg.msg"
@@ -103,7 +104,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
   # ${active_files}
-  DEPENDENCIES std_msgs geometry_msgs
+  DEPENDENCIES std_msgs geometry_msgs trajectory_msgs
 )
 
 ament_package()

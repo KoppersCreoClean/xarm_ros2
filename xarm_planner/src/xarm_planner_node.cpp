@@ -14,6 +14,7 @@
 #include <xarm_msgs/srv/plan_joint.hpp>
 #include <xarm_msgs/srv/plan_exec.hpp>
 #include <xarm_msgs/srv/plan_single_straight.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
 
 #define BIND_CLS_CB(func) std::bind(func, this, std::placeholders::_1, std::placeholders::_2)
 
@@ -78,7 +79,7 @@ bool XArmPlannerRunner::do_joint_plan(const std::shared_ptr<xarm_msgs::srv::Plan
 
 bool XArmPlannerRunner::do_straight_plan(const std::shared_ptr<xarm_msgs::srv::PlanSingleStraight::Request> req, std::shared_ptr<xarm_msgs::srv::PlanSingleStraight::Response> res)
 {
-    bool success = xarm_planner_->planCartesianPath(req->target);
+    bool success = xarm_planner_->planCartesianPath(req->trajectory);
     res->success = success;
     return success;
 }
